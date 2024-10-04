@@ -1,0 +1,17 @@
+---
+title: "US Obesity Model"
+author: "Brett Peters"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Deliverable 1 - Four plots of Linear Model
+
+![](d1a.png)
+![](d1b.png)
+![](d1c.png)
+![](d1d.png)

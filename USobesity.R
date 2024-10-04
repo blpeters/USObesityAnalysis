@@ -2,6 +2,8 @@ library(prism)
 library(raster)
 library(sf)
 library(dplyr)
+library(ggplot2)
+library(viridis)
 
 # Using PRISM package, download the max temps in July for 30 years (1981-2010 per docs)
 prism_set_dl_dir('C:/Users/brett/OneDrive/Documents/Course_Materials/MSU_GDAV_Certificate/SPST/Activity14/data')
@@ -28,3 +30,23 @@ USdata <- st_read('data/inc_obes.gpkg') # Obesity and income data
 # values by the polygons defined in USdata using the raster extract() fun.
 USdata$tmax <- extract(tmax, USdata, fun = mean, na.rm = TRUE)
 USdata$elev <- extract(USdem, USdata, fun = mean, na.rm = TRUE)
+
+ggplot() + 
+  geom_sf(data = USdata,
+          aes(geometry = geom, fill = elev)) +
+  coord_sf(crs = 4269, xlim = c(-125,-66), ylim = c(24,50)) +
+  scale_fill_viridis(direction = 1, option = "turbo")
+
+# Rename complicated variables
+USdata <- USdata %>% rename(medinc = estimate, ob_pct = usobesity_Obesitypct,
+                            inac_pct = usobesity_Inactivepct, fid = usobesity_fid,
+                            state = usobesity_State, county  = usobesity_County)
+
+# Exploratory Data Analysis
+# Hypotheses - Obesity increases as temperature increases. Obesity increases as 
+# elevation decreases. Obesity increases as median income decreases
+
+# linear model of obesity as function of elev, temp, income
+USlm <- lm(ob_pct ~ tmax + medinc + elev, data = USdata)
+plot(USlm)
+
