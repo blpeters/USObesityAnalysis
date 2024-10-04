@@ -50,3 +50,38 @@ USdata <- USdata %>% rename(medinc = estimate, ob_pct = usobesity_Obesitypct,
 USlm <- lm(ob_pct ~ tmax + medinc + elev, data = USdata)
 plot(USlm)
 
+# notes on linear model:
+# residuals in this case are (actual obesity pct) - (predicted obesity pct)
+# Residual vs. fitted graph useful to see if we are using the appropriate type 
+# of model (linear) for the dataset. Our model appears to be linear and exhibits
+# homoscedasticity with consistent variance at most observed values. However, the
+# model is tending to overpredict obesity at the low ends and underpredict at
+# the higher end.
+#
+# Q-Q Plot - Quantile-Quantile
+# Tells us if residuals are normally distributed
+# There's a decent amount of points beyond 2 standard deviations, but it's hard
+# to tell how many out of the whole set. possibly more than 5% though. The
+# overpredicting of low values and underpredicting of high values still holds
+#
+# Scale - Location Plot
+# shows if the residuals are spread equally among our predictions in order to 
+# check homoscedasticity (equal variance of residuals)
+#
+# The regression summary:
+# median is close to zero, so this is good to indicate the distribution is 
+# normal and the model isn't skewed.
+# min and max and 1st and 3rd quartile are very close as well. normal!
+# Estimate (coefficients) tmax - for a 1 degree increase in max temp in July,
+# we can expect a .21% increase in obesity (and it's significant ***)
+# t value is the number of standard deviations between the estimate and 0 -
+# zero being no effect. In general, if t is high, coefficient is statistically
+# significant.
+# p-value for the t-test (0.05 as benchmark). All three are highly significant.
+# close to 0% chance this is due to chance.
+# Reject the null hypothesis that temp, elev, and median income have no effect
+# on predicted obesity rates.
+# Adjusted R-squared is only 0.52, so these three variables only explain roughly
+# half of the obesity percentage in the US
+# F-statistic - General indicator if there is an actual relationship between
+# predictor variables and the response variable. Higher is more significant
