@@ -1,6 +1,9 @@
 library(prism)
 library(raster)
 library(sf)
+library(sfdep)
+library(spdep)
+library(spatialreg)
 library(dplyr)
 library(ggplot2)
 library(viridis)
@@ -25,6 +28,7 @@ countiestidy <- counties %>% select(FIPS, geometry)
 USdem <- raster('data/NAdem.tif') # DEM elevation raster
 plot(USdem)
 USdata <- st_read('data/inc_obes.gpkg') # Obesity and income data
+
 
 # Need to add raster data to the USdata set - aggregate (average) the raster 
 # values by the polygons defined in USdata using the raster extract() fun.
@@ -85,3 +89,88 @@ plot(USlm)
 # half of the obesity percentage in the US
 # F-statistic - General indicator if there is an actual relationship between
 # predictor variables and the response variable. Higher is more significant
+
+
+################# PART B - LOOK FOR CLUSTERS ######################
+
+# Perform Moran's I test and Getis-Ord Gi* test
+
+# Global Moran's I to determine overall spatial clustering
+# LISA - Local Indicators of Spatial Association to identify hot spots or
+# clusters of high/ low values and spatial outliers (Local Moran's I/Getis-Ord)
+
+USdata_clean <- na.omit(USdata)
+USdata_clean2 <- USdata_clean[!st_is_empty(USdata_clean),]
+
+# Global Moran's I - Need neighbors, weighted distance and the data (NWX)
+neigh <- st_contiguity(USdata_clean2)
+wts <- st_weights(neigh, allow_zero = TRUE)
+USgm <- global_moran(USdata_clean2$ob_pct, neigh, wts)
+
+# Local Moran's I
+USlocalm <- local_moran(USdata_clean2$ob_pct, neigh, wts)
+USdata_clean2$pysal <- USlocalm$pysal
+
+ggplot() +
+  geom_sf(data = USdata_clean2, aes(geometry = geom, fill = pysal)) +
+  scale_fill_manual(values = c("#0004f9", "#84e802", "#ce84ff", "#fc0206")) +
+  labs(title = "Local Moran's I - US Obesity Rates") +
+  theme_void()  
+
+# Getis-Ord Gi*
+gi <- local_gstar_perm(USdata_clean2$ob_pct, neigh, wts)
+
+# z score map
+USdata_clean2 %>% ggplot(aes(fill = gi$gi_star))  +
+  geom_sf() +
+  scale_fill_gradient2(low = 'blue', high = 'red') +
+  labs(title = "Getis-Ord Gi-star - US Obesity", fill = 'Z-Score') +
+  theme_void()
+
+# p-value map
+USdata_clean2 %>% ggplot(aes(fill = gi$p_value))  +
+  geom_sf() +
+  scale_fill_gradient2() +
+  labs(title = "Getis-Ord Gi-star: p-values - US Obesity", fill = 'p-value') +
+  theme_void()
+
+# Spatial Lag Model
+
+nb <- poly2nb(USdata_clean2, queen = TRUE)
+weights <- nb2listw(nb, style = "W",zero.policy = TRUE)
+
+model <- lm(USdata_clean2$ob_pct ~ USdata_clean2$tmax + USdata_clean2$medinc + USdata_clean2$elev, data = USdata_clean2)
+obSLM <- lagsarlm(model, listw = weights, zero.policy=TRUE)
+
+# plot SLM and raw obesity data to compare
+fitted_slm <- as.vector(fitted(obSLM))
+ggplot(USdata_clean2) +
+       geom_sf(aes(fill = fitted_slm)) +
+       scale_fill_viridis_c(limits = range(USdata_clean2$ob_pct)) +
+       labs(title = 'Spatial Lag Model') +
+       theme_void()
+ggplot(USdata_clean2) +
+  geom_sf(aes(fill = ob_pct)) +
+  scale_fill_viridis_c(limits = range(USdata_clean2$ob_pct)) +
+  labs(title = "Raw Obesity %") + 
+  theme_void()
+
+# Spatial Error Model
+
+modelSEM <- errorsarlm(model, listw = weights, zero.policy = TRUE)
+fitted_sem <- as.vector(fitted(modelSEM))
+
+# plot fitted SEM values
+ggplot(USdata_clean2) +
+  geom_sf(aes(fill = fitted_sem)) +
+  scale_fill_viridis_c(limits = range(USdata_clean2$ob_pct)) +
+  labs(title = 'Spatial Error Model - Fitted Values') +
+  theme_void()
+
+# Also plot residuals
+residuals <- as.vector(residuals(modelSEM))
+ggplot(USdata_clean2) + 
+  geom_sf(aes(fill = residuals)) + 
+  labs(title = 'Residuals of Fitted Values of Spatial Error Model') + 
+  scale_fill_viridis_c() +
+  theme_void()

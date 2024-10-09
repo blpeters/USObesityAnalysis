@@ -1,24 +1,27 @@
 ---
-title: "US Obesity Model"
+title: "Exercise 14 - US Obesity Model"
 author: "Brett Peters"
 date: "`r Sys.Date()`"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
+  word_document: default
+editor_options:
+  markdown:
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-### Deliverable 1 - Four plots of Linear Model  
 
-![](d1a.png)
-![](d1b.png)
-![](d1c.png)
+### Deliverable 1 - Four plots of Linear Model
+![](d1a.png) 
+![](d1b.png) 
+![](d1c.png) 
 ![](d1d.png)
 
-
-### Deliverable 2 - Summary of Linear Model  
+### Deliverable 2 - Summary of Linear Model
 
 ![](d2.png)
 
@@ -26,4 +29,224 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #### Question 1: What do your results say about the validity of your model? Is this model good? Is it bad? Interpret the t-values, but also the other statistics and explain what else you might do to make the model better.
 
-#### Answer:  
+#### Answer:
+
+The quick overall answer is that the model provides a decent linear fit
+to the data, but these 3 variables only explain a little over half of
+the obesity variable with an adjusted R-Squared of 0.52. The model needs
+improvement.
+
+More specifically, each individual independent variable is shown to be
+highly significant in the obesity model, with high t-values all over 10
+in magnitude and the resulting p-values extremely close to zero.
+Temperature is shown to have a positive correlation with obesity, with
+every 1 degree increase in maximum July temperatures, there is a .21
+percent increase in obesity rates. There is a mild decline seen in
+obesity rates with increases in both elevation and median income. The
+median value is very close to 0 and the 1st and 3rd quantile values are
+very similar and very close to 2.0, indicating this data is mostly
+normally distributed.
+
+The model itself appears to tend to over predict obesity at lower values
+and under predict at higher values. This is most clearly seen in the
+residuals vs. fitted plot and also the quantile-quantile plot. It
+appears that more independent variables are needed to better model and
+explain obesity rates.
+
+The scale - location plot has some interesting patterns - It's worth
+exploring the spatial error models to determine the effects of the
+spatial patterns on the data.
+
+The residuals vs. leverage plot does not indicate any outliers that are
+over leveraging the results beyond the Cook's distance, so I believe all
+data points can remain in the model.
+
+### Deliverable 4 - Clustering Test Results
+
+I first checked the Global Moran's I for overall spatial clustering:  
+
+![](d4a.png)
+
+Next, I will perform the Local Moran's I test to see hot/cold spots and
+spatial outliers: 
+
+![Clear Clustering in Local Moran's I plot](d4b.png)
+
+Finally, I performed a Getis-Ord Gi* clustering test to see the degree
+of hot/cold spots, including a graph of p-values to complement the data:
+
+![](d4c.png) 
+
+![](d4d.png)
+
+### Deliverable 5
+
+#### Question 2. Explain the results of your clustering. Did you detect spatial autocorrelation, or hot spots? What do the results mean?
+
+#### Answer:
+
+The Global Moran's I of 0.61 indicates spatial autocorrelation and
+strong clustering in US obesity rates. We should look to spatial lag or
+error models to account for this.
+
+Clustering is clearing shown in the Local Moran's I map, with many cold
+spots in the West and in the Northeast, and to some degree in the
+Minnesota/Wisconsin Area and the Florida peninsula. We also see cold
+spots in some urban areas like Dallas and Austin areas in Texas,
+Minneapolis, and along the Appalachian Mountain range. Much of the
+American south and Midwest counties are hot spots.
+
+The Getis-Ord Gi* map reveals a similar overall pattern of clustering
+as the Local Moran's I map, but makes it easier to see the degree of and
+specifics of the clustering with the z-scores. Colorado jumps out in
+this map as a clear cold spot, as well as San Francisco/Northern
+California, the New York City area, and New England. This includes low
+corresponding p-values in these areas indicating significance. The cool
+spot in the Appalachian mountain range is shown here too, but the
+p-values in this area are much higher, so the results are not
+significant.
+
+The main hot spots of significance that I see are in the south around
+the Mississippi River in Louisiana, Mississippi, and Alabama and another
+statistically significant spot in South Texas. There also appears to be
+a significant hot spot in the Ohio/West Virginia area. All of these hot
+spots appear to have low enough p-values to be considered significant.
+Some other hot spots in the Midwest do not have sufficiently low
+p-values to be considered significant.
+
+### Deliverable 6 - Plot of Spatial Lag Model and raw data  
+
+Results of spatial lag model:  
+
+![](d6a.png)  
+
+![](d6b.png)  
+
+![](d6c.png)
+
+### Deliverable 7 - SLM Results Discussion
+
+#### Question 3. What do your results indicate? Does the inclusion of lagged values improve your model?
+
+#### Answer:
+
+As is expected, the plot of the fitted SLM values is a smoothed version
+of the raw obesity data - The SLM is averaging some of the nearby values
+to create a blending effect in the map. Also, the range of values is
+smaller in the SLM than the raw data, as the SLM softens the extreme
+values - I added a consistent scale to the fill colors on both maps so
+they could be compared visually.
+
+The spatial lag model shows significant improvement compared to the
+linear model. The lower AIC value of 15124 for the SLM compared to the
+15893 of the linear model indicates the SLM is an improved fit. The Rho
+coefficient term is highly significant with a value of 0.475, indicating
+a strong spatial dependence in the dependent variable (obesity rates).
+
+### Deliverable 8 - Plot of SEM fitted values
+
+Results of spatial error model: 
+
+![](d8a.png) 
+
+![](d8.png)
+
+### Deliverable 9 - Plot of SEM residual values
+
+![](d9.png)
+
+### Deliverable 10
+
+#### Question 4. What does the SEM show? Explain what your results mean about the error model.
+
+#### Answer:
+
+The value of the spatial error coefficient lambda is 0.644 and is highly
+significant, indicating the strong spatial dependence in the data. This
+shows that accounting for the spatial error dependence is improving the
+model fit, and we can also see that in the lower AIC value compared to
+the linear model (14893 vs 15893).
+
+This improved performance when accounting for the spatial error
+dependence indicates that there are more variables significantly
+affecting the obesity rates besides the three we've used in the model. A
+better model may need to identify the other important variables such as
+smoking or drinking.
+
+#### Question 5. What did you learn from the linear regression, the SLM, and the SEM? What insights did you gain from these models?
+
+#### Answer:
+
+The effects seen from the three independent variables remains similar
+(of the same magnitude) in all three models, adding to the confidence
+that the effect seen from these variables is consistent between models.
+However, as seen in the R-squared of 0.52 from the linear model, these 3
+variables are significant but they only explain half of the variance
+observed.
+
+The linear regression provided a sense of the significance of the
+independent variables, but also indicated that further adjustments to
+the model were needed because of the R-squared values and significance
+of the Global Moran's I value. As a result, the SEM and SLM were
+performed to try to account for spatial dependence.
+
+Both the spatial error and spatial lag models significantly improved the
+fit to the data. The improvement seen in the SLM (and the highly
+significant rho value of 0.47) indicates spatial dependence in the
+dependent variable - obesity rates are correlated with obesity rates of
+nearby counties. Similarly, the improvement seen in the SEM (and the
+highly significant lambda value of 0.64) indicates spatial dependence in
+the residuals and there are additional factors to consider that could
+better represent obesity rates.
+
+Overall, it appears the spatial error model fit the data the best with
+the lowest AIC, but both the SLM and SEM significantly improved and lag
+and error should both be accounted for to improve model performance.
+
+### Deliverable 11
+
+#### Question 6. Thinking more broadly, does it make sense that elevation and temperature should be related to obesity?
+
+#### Answer:
+
+I think temperature makes sense - Areas with higher maximum July
+temperatures indicate hot summers where people may avoid outdoors during
+the heat of the day, and be less likely to be physically active, which
+could contribute to obesity. I think elevation also makes sense -
+Intuitively, there is a relationship between higher elevations and lower
+temperatures, so people may be more active in the warm months. However
+this effect may be the opposite in the winter months, where people may
+stay indoors more and be inactive, so this reasoning is questionable.
+Another reason elevation could have an inverse relationship with obesity
+is that these areas have more scenic outdoors activities and hilly
+elevations where people may stay more fit walking hills and doing
+recreational activities outdoors. Also, people who enjoy these
+activities will be more concentrated in these areas, and would tend to
+have lower rates of obesity. Finally, there could be a component of
+human physiology due to the lower oxygen content at altitude. All of
+these reasons would obviously need scientific and statistical backing to
+be included in the model.
+
+### Deliverable 12
+
+#### Question 7. Think about the MAUP. We did all these calculations by county; how might these models and patterns be due to the choice of county-level data, and what other Areal Units might be appropriate for analyzing obesity’s dependence on these variables?
+
+#### Answer:
+
+Counties provide a decently-sized areal unit for performing this
+analysis, but the size of counties varies widely. Many counties in the
+southwest are huge compared to tiny counties in areas likely Kentucky.
+Also, the population densities across all counties can vary widely. This
+does not mean that the analysis is invalid, but should be considered in
+the results. For example, large counties with low population densities
+can produce outliers that overweight spatial dependence. I think the
+best alternative would be a uniform-sized tesselation of quadrats or
+hexagons to adjust for the varying size problem of the counties. The
+size of the quadrats would be important, but something around the size
+of an average county would be a decent start.
+
+Using tract-level data would probably create too many outliers or
+extreme values due to areas with very low sample sizes. Using
+state-level data would be too coarse and the areas of states vary too
+much, so accurately accounting for spatial dependence would be
+difficult.
